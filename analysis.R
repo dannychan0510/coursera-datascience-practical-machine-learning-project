@@ -5,10 +5,22 @@ setwd("~/Documents/GitHub/coursera-datascience-practical-machine-learning-projec
 library(caret)
 
 # Load in training and test datasets
-train <- read.csv("pml-training.csv")
-test <- read.csv("pml-testing.csv")
+train <- read.csv("pml-training.csv", na.strings = c("NA", "", "#DIV/0!"))
+test <- read.csv("pml-testing.csv", na.strings = c("NA", "", "#DIV/0!"))
 
-# Create training and testing datasets
-inTrain <- createDataPartition(y = )
+# Checking dimension of training and testing data
+dim(train)
+dim(test)
 
-# Need to clean dataset
+# Delete columns with all missing values
+train <- train[ , colSums(is.na(train)) == 0]
+test <- test[ , colSums(is.na(test)) == 0]
+
+# Drop variables that are not useful to the machine learning
+train <- train[ , -c(1:7)]
+test <- test[ , -c(1:7)]
+
+# Segmenting training dataset for cross validation purposes using a 60:40 split
+ss <- createDataPartition(y=train$classe, p=0.75, list=FALSE)
+subTraining <- train[ss, ] 
+subTesting <- train[-ss, ]
