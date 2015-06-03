@@ -3,6 +3,7 @@ setwd("~/Documents/GitHub/coursera-datascience-practical-machine-learning-projec
 
 # Load relevant libraries
 library(caret)
+library(rattle)
 
 # Load in training and test datasets
 train <- read.csv("pml-training.csv", na.strings = c("NA", "", "#DIV/0!"))
@@ -24,3 +25,17 @@ test <- test[ , -c(1:7)]
 ss <- createDataPartition(y=train$classe, p=0.75, list=FALSE)
 subTraining <- train[ss, ] 
 subTesting <- train[-ss, ]
+
+# Predicting with trees
+set.seed(100)
+modFitTree <- train(classe ~ ., method = "rpart", data = subTraining)
+
+# Looking at the tree predicted
+print(modFitTree$finalModel)
+
+# Plotting the plot tree
+fancyRpartPlot(modFitTree$finalModel)
+
+# Generating predictions
+prediction <- predict(modFitTree, newdata = subTesting)
+confusionMatrix(prediction, subTesting$classe)
