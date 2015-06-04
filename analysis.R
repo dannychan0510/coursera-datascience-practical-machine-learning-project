@@ -38,4 +38,4 @@ fancyRpartPlot(modFitTree$finalModel)
 
 # Generating predictions
 prediction <- predict(modFitTree, newdata = subTesting)
-confusionMatrix(prediction, subTesting$classe)
+confusionMatrix(predictionsA1, subTesting$classe)
