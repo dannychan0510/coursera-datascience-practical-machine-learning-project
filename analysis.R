@@ -37,5 +37,15 @@ print(modFitTree$finalModel)
 fancyRpartPlot(modFitTree$finalModel)
 
 # Generating predictions
-prediction <- predict(modFitTree, newdata = subTesting)
-confusionMatrix(predictionsA1, subTesting$classe)
+prediction_modFitTree <- predict(modFitTree, newdata = subTesting)
+confusionMatrix(prediction_modFitTree, subTesting$classe)
+
+# Predicting with Logistic Regressions
+modFitLogit <- train(classe ~ ., method = "LogitBoost", data = subTraining)
+prediction_modFitLogit <- predict(modFitLogit, newdata = subTesting)
+confusionMatrix(prediction_modFitLogit, subTesting$classe)
+
+# Predicting with Random Forests
+modFitRF <- train(classe ~ ., method = "rf", data = subTraining)
+prediction_modFitRF <- predict(modFitRF, newdata = subTesting)
+confusionMatrix(prediction_modFitRF, subTesting$classe)
