@@ -30,7 +30,7 @@ subTesting <- train[-ss, ]
 set.seed(100)
 modFitTree <- train(classe ~ ., method = "rpart", data = subTraining)
 
-# Looking at the tree predicted
+# Looking at the treeqpl predicted
 print(modFitTree$finalModel)
 
 # Plotting the plot tree
