@@ -2,15 +2,15 @@
 ## Practical Machine Learning Project
 
 ### Files In This Repo
-|File |Description|
-|:----|:----------|
-|README.md| This repo's readme file|
-|analysis.R| R code used for this assignment|
-|pml-test.csv| Testing dataset used for this assignment|
-|pml-training.csv| Training dataset used for this assignent|
+|File                   |Description                              |
+|:----------------------|:----------------------------------------|
+|README.md              | This repo's readme file                 |
+|analysis.R             | R code used for this assignment         |
+|pml-test.csv           | Testing dataset used for this assignment|
+|pml-training.csv       | Training dataset used for this assignent|
 |problem_id_[number].txt| Prediction files prepared for submission|
-|writeup.Rmd| R markdown report of this assignment|
-|writeup.html| HTML file compiled from writeup.Rmd|
+|writeup.Rmd            | R markdown report of this assignment    |
+|writeup.html           | HTML file compiled from writeup.Rmd     |
 
 ### Instructions From Course Page
 ####  Background
