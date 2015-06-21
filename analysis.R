@@ -49,3 +49,19 @@ confusionMatrix(prediction_modFitLogit, subTesting$classe)
 modFitRF <- train(classe ~ ., method = "rf", data = subTraining)
 prediction_modFitRF <- predict(modFitRF, newdata = subTesting)
 confusionMatrix(prediction_modFitRF, subTesting$classe)
+
+# Predict outcome levels on the original Testing data set using Random Forest algorithm
+predictfinal <- predict(modFitRF, newdata = test)
+predictfinal
+
+# Write files for submission
+pml_write_files = function(x){
+  n = length(x)
+  for(i in 1:n){
+    filename = paste0("problem_id_",i,".txt")
+    write.table(x[i],file=filename,quote=FALSE,row.names=FALSE,col.names=FALSE)
+  }
+}
+
+pml_write_files(predictfinal)
+

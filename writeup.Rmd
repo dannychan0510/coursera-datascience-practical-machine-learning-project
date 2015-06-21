@@ -8,18 +8,153 @@ output: html_document
 # Introduction
 Using devices such as Jawbone Up, Nike FuelBand, and Fitbit it is now possible to collect a large amount of data about personal activity relatively inexpensively.
 
-This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+The *Weight Lifting Exercises Dataset* (sourced from http://groupware.les.inf.puc-rio.br/har) contains sensor data from tracking athletes lifting weights, with the purpose of evaluating "proper" exercuse form. Each participant was instructed to perform an exercise give different ways:
 
-When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+Class      | Definition
+---------- | ----------------------------------------
+A          | Exactly according to specification
+B          | Throwing elbows to the front
+C          | Lifting the dumbbells only halfway
+D          | Lowering the dumbells only halfway
+E          | Throwing the hips to the front
+
+In this exercise, we will use this data to create a prediction model to detect the variation of the exercise being performed based on collected sensor data.
+
+# Reproduceability
+In order to reproduce the same results as the ones being presented in this report, you would need to download a set of packages, as well as setting a pseudo seed equal to the one being used.
+
+The following libraries were used for this report which you should install if not done yet and load onto your working environment. To install a package (for example, the caret package), simply run this command: `install.packages("caret")`.
 
 ```{r}
-summary(cars)
+# Loading libraries
+library(caret)
+library(rattle)
 ```
 
-You can also embed plots, for example:
+Also, load the following seed with the following line of code:
 
-```{r, echo=FALSE}
-plot(cars)
+```{r}
+# Setting seed
+set.seed(100)
 ```
 
-Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
+# Data
+
+## Loading the dataset
+The training dataset can be found on the following URL:
+
+```{r eval = FALSE}
+# Training URL
+trainUrl <- "http://d396qusza40orc.cloudfront.net/predmachlearn/pml-training.csv"
+```
+
+The testing dataset can be found on the following URL:
+
+```{r eval = FALSE}
+# Testing URL
+testUrl <- "http://d396qusza40orc.cloudfront.net/predmachlearn/pml-testing.csv"
+```
+
+To load the data, save the dataset into your working directory, and run the following code (changing the working directory to your own).
+
+```{r}
+# Loading in datasets
+setwd("~/Documents/GitHub/coursera-datascience-practical-machine-learning-project")
+train <- read.csv("pml-training.csv", na.strings = c("NA", "", "#DIV/0!"))
+test <- read.csv("pml-testing.csv", na.strings = c("NA", "", "#DIV/0!"))
+```
+
+
+## An initial look at the data, and data cleaning
+The datasets contain 160 variables each. The training data set contains 19622 observations, whilst the testing dataset contains 20.
+
+```{r}
+# Checking dimension of training and testing data
+dim(train)
+dim(test)
+```
+
+Briefly scanning the data, there are a lot of variables which contain no data, or are all 0s. We drop these variables from our dataset, and also variables that are not useful to the machine learning algorithms (e.g. description variables etc).
+
+```{r}
+# Delete columns with all missing values
+train <- train[ , colSums(is.na(train)) == 0]
+test <- test[ , colSums(is.na(test)) == 0]
+
+# Drop variables that are not useful to the machine learning
+train <- train[ , -c(1:7)]
+test <- test[ , -c(1:7)]
+```
+
+
+## Segmenting the training datasets into a training and testing dataset for cross validation
+For cross validation purposes, we further segment the training dataset into another training and testing dataset.
+
+```{r}
+# Segmenting training dataset for cross validation purposes using a 60:40 split
+ss <- createDataPartition(y=train$classe, p=0.75, list=FALSE)
+subTraining <- train[ss, ] 
+subTesting <- train[-ss, ]
+```
+
+# Machine Learning
+## Training with decision trees
+We first build a simple machine learning prediction using decision trees.
+
+```{r}
+# Predicting with trees
+modFitTree <- train(classe ~ ., method = "rpart", data = subTraining)
+
+# Looking at the treeqpl predicted
+print(modFitTree$finalModel)
+
+# Plotting the plot tree
+fancyRpartPlot(modFitTree$finalModel)
+```
+
+We use the cross-validation testing dataset to test the prediction from the decision tree.
+
+```{r}
+# Generating predictions from decision tree
+prediction_modFitTree <- predict(modFitTree, newdata = subTesting)
+confusionMatrix(prediction_modFitTree, subTesting$classe)
+```
+
+We get an accuracy of 0.489 - not bad, but we could definitely do better. The decision tree was particularly bad at predicting Class D - it did not land any predictions in Class D.
+
+
+## Training with Random Forests
+Let us now predict using a Random Forest algorithm. Again, we build the Random Forest model using the training dataset from the cross validation.
+
+```{R}
+# Predicting with Random Forests
+modFitRF <- train(classe ~ ., method = "rf", data = subTraining)
+prediction_modFitRF <- predict(modFitRF, newdata = subTesting)
+confusionMatrix(prediction_modFitRF, subTesting$classe)
+```
+This is much better - using Random Forests, we get an accuracy rate of 0.9923
+
+
+# Conclusion
+As expected, the Random Forest algorithm performed better than Decision Trees. Accuracy for Random Forest model was 0.9923 (95% CI: (0.9894, 0.9945)) compared to 0.489 (95% CI: (0.4749, 0.5031)) for Decision Tree model. Therefore we choose the Random Forest algorithm is choosen. The accuracy of the model is 0.9923. The expected out-of-sample error is estimated at 0.0077, or 0.77%. The expected out-of-sample error is calculated as 1 - accuracy for predictions made against the cross-validation set. Our Test data set comprises 20 cases. With an accuracy above 99% on our cross-validation data, we can expect that very few, or none, of the test samples will be missclassified.
+
+
+# Generating Submission Files
+We first generate the predictions using the actual test dataset, and then prepare the files to submit.
+
+```{r}
+# Predict outcome levels on the original Testing data set using Random Forest algorithm
+predictfinal <- predict(modFitRF, newdata = test)
+predictfinal
+
+# Write files for submission
+pml_write_files = function(x){
+  n = length(x)
+  for(i in 1:n){
+    filename = paste0("problem_id_",i,".txt")
+    write.table(x[i],file=filename,quote=FALSE,row.names=FALSE,col.names=FALSE)
+  }
+}
+
+pml_write_files(predictfinal)
+```
